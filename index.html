@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mentoria de crescimento nas redes com o Maicon | Diagnóstico</title>
+<meta name="description" content="Diagnóstico gratuito em 7 perguntas: descubra o que trava o seu crescimento nas redes e veja o que o Maicon faria primeiro no seu perfil.">
+<!-- DEMONSTRAÇÃO: impede o Google de indexar a demo. Apague esta linha quando a página for ao ar de verdade. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1D1D1D">
+<meta name="color-scheme" content="dark">
+<!-- Prévia do link no WhatsApp/Instagram: troque SEU-USUARIO e NOME-DO-REPOSITORIO pelo endereço real e envie og-image.jpg (1200x630) -->
+<link rel="canonical" href="https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="Mentoria do Maicon">
+<meta property="og:title" content="Por que o seu perfil não cresce? Descubra em 1 minuto.">
+<meta property="og:description" content="Diagnóstico gratuito: veja o que trava o seu crescimento nas redes e o que o Maicon faria primeiro no seu perfil.">
+<meta property="og:url" content="https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/">
+<meta property="og:image" content="https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Mentoria de crescimento nas redes do Maicon">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Ícone da aba: gere o favicon.png (prompt no README) e tire o comentário da linha abaixo -->
+<!-- <link rel="icon" href="favicon.png" type="image/png"> -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Manrope:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* =====================================================================
+   Mentoria do Maicon · funil em uma página
+   Tela 1: só o quiz. Luz fluida em WebGL ao fundo e um gráfico que sobe a cada resposta.
+   Tela 2: página do vídeo (VSL), aberta depois do resultado e personalizada por ele.
+   Celular primeiro: quase todo mundo chega pelo link da bio do Instagram.
+   Paleta da marca Nextrix: grafite, branco e verde-limão.
+   ===================================================================== */
+:root {
+  color-scheme: dark;
+  /* Cores */
+  --bg: #1D1D1D;
+  --surface: rgba(40, 40, 40, .84);     /* translúcido para a luz aparecer, escuro o bastante para o texto ler bem */
+  --line: #363636;
+  --line-2: #4A4A4A;
+  --edge: rgba(255, 255, 255, .09);
+  --text: #FCFCFC;
+  --text-2: #C9C9C9;
+  --muted: #8E8E8E;                      /* 5:1 sobre o fundo, passa no WCAG AA */
+  --lime: #E4FC44;
+  --lime-hover: #EEFF7A;
+  --lime-soft: rgba(228, 252, 68, .10);
+  --on-lime: #1D1D1D;                    /* texto sobre o limão é sempre grafite, nunca branco */
+  /* Tipografia: Poppins arredondada como a logo, Manrope para leitura, mono para rótulos técnicos */
+  --font-head: "Poppins", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  /* Forma e movimento: cantos arredondados e pílulas, como as formas da logo */
+  --r: 18px;
+  --r-lg: 24px;
+  --pill: 999px;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --top-h: 52px;
+}
+/* Área segura do iPhone (entalhe e barra de início) */
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+[hidden] { display: none !important; }
+*, *::before, *::after { box-sizing: border-box; }
+* { -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; }
+html.lock { overflow: hidden; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+  overflow-x: hidden;
+}
+button { font: inherit; color: inherit; }
+a { color: inherit; text-decoration: none; }
+p { margin: 0; text-wrap: pretty; }
+:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; }
+h1:focus-visible, h2:focus-visible { outline: none; } /* o foco vai para o título só para leitores de tela */
+::selection { background: rgba(228, 252, 68, .3); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.mono { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.mono.lime { color: var(--lime); }
+
+/* ===== Camadas do fundo: luz (atrás) → sombra → gráfico (na frente, nítido) ===== */
+.bgl { position: fixed; inset: 0; pointer-events: none; }
+.bgl canvas { width: 100%; height: 100%; display: block; }
+#bg-gl { z-index: -3; background: radial-gradient(ellipse 80% 50% at 60% 10%, rgba(228,252,68,.10), transparent 70%), var(--bg); } /* reserva se o WebGL falhar */
+.shade { position: fixed; inset: 0; z-index: -2; pointer-events: none; background: linear-gradient(to bottom, rgba(29,29,29,.15), rgba(29,29,29,.5) 45%, rgba(29,29,29,.68)); transition: background .8s; }
+@media (min-width: 1000px) { .shade { background: linear-gradient(to right, rgba(29,29,29,.82) 0%, rgba(29,29,29,.6) 40%, rgba(29,29,29,.14) 62%, rgba(29,29,29,.08) 100%); } }
+#bg-chart { z-index: -1; opacity: 0; transition: opacity 1.2s var(--ease); }
+body.vsl #bg-chart { opacity: .1; }     /* na página do vídeo o gráfico da pessoa vira marca d'água */
+body.vsl .shade { background: rgba(29,29,29,.45); }
+
+/* ===== Topo ===== */
+.top { max-width: 1180px; margin: 0 auto; height: var(--top-h); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 44px; }
+.brand b { font-family: var(--font-head); font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
+.brand b span { color: var(--lime); }
+.brand small { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+@media (max-width: 359px) { .brand small { display: none; } }
+.top-cta { display: none !important; }
+@media (min-width: 860px) { body.vsl .top-cta { display: inline-flex !important; } } /* no desktop o botão do topo garante um CTA sempre visível */
+
+/* ===== TELA 1 · QUIZ ===== */
+#view-quiz {
+  max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column;
+  min-height: calc(100vh - var(--top-h) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  min-height: calc(100svh - var(--top-h) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+}
+.layout { flex: 1; display: grid; gap: 12px; align-content: start; padding-bottom: 8px; }
+/* O gráfico é desenhado exatamente dentro deste espaço reservado: assim ele rola junto com o conteúdo
+   no celular e fica alinhado à coluna da direita no desktop, em qualquer largura de tela. */
+.slot { position: relative; height: clamp(132px, 24vh, 230px); height: clamp(132px, 24svh, 230px); touch-action: manipulation; }
+.slot canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; } /* canvas do tamanho do gráfico, não da tela: bem mais leve */
+/* Celular baixinho (iPhone SE/8 de 667px, Androids de 640px): compacta para as 4 opções caberem sem rolar */
+@media (max-width: 999px) and (max-height: 700px) {
+  .slot { height: 100px; } .hint { display: none; }
+  .screen { gap: 12px; } .opts { gap: 6px; } .opt { min-height: 50px; padding-block: 11px; }
+}
+/* Celular bem pequeno (320 x 568): aperta mais um pouco, sem descer dos 44px de área de toque */
+@media (max-width: 999px) and (max-height: 600px) {
+  .slot { height: 80px; }
+  .screen { gap: 10px; } .screen h2 { font-size: 1.2rem; }
+  .opt { min-height: 46px; padding-block: 8px; gap: 12px; font-size: .94rem; }
+}
+@media (min-width: 1000px) {
+  .layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 56px; align-content: center; align-items: center; padding-block: 24px; }
+  .slot { order: 2; height: min(64vh, 520px); }
+}
+.tip { position: absolute; z-index: 3; transform: translate(-50%, calc(-100% - 14px)); max-width: min(80%, 260px); background: var(--text); color: var(--on-lime); font-size: 12.5px; font-weight: 600; line-height: 1.35; padding: 7px 10px; border-radius: 10px; pointer-events: none; box-shadow: 0 8px 24px rgba(0,0,0,.45); }
+.tip small { display: block; font-family: var(--font-mono); font-size: 9.5px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: #5A5A5A; }
+
+.quiz { min-width: 0; max-width: 600px; position: relative; }
+.screen { display: grid; gap: 16px; }
+@media (min-width: 1000px) { .screen { gap: 20px; } }
+.kicker { display: flex; align-items: center; gap: 10px; }
+.kicker .bar { flex: 1; height: 3px; border-radius: 3px; background: var(--line); overflow: hidden; max-width: 160px; }
+.kicker .bar i { display: block; height: 100%; background: var(--lime); border-radius: 3px; transition: width .6s var(--ease); }
+h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 700; letter-spacing: -0.03em; text-wrap: balance; outline: none; }
+.screen h2 { font-size: clamp(1.35rem, 6.2vw, 2.2rem); line-height: 1.18; }
+h1 em, h2 em, h3 em { font-style: normal; color: var(--lime); }
+.w { display: inline-block; white-space: pre; }
+.sub { font-size: 1rem; color: var(--text-2); max-width: 46ch; }
+
+.opts { display: grid; gap: 8px; }
+@media (min-width: 1000px) { .opts { gap: 10px; } }
+.opt {
+  position: relative; overflow: hidden; isolation: isolate;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  width: 100%; min-height: 56px; padding: 14px 16px 14px 18px; text-align: left;
+  background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  font-family: var(--font-head); font-weight: 500; font-size: 1rem; line-height: 1.35; letter-spacing: -0.005em;
+  cursor: pointer; transition: transform .18s var(--ease), border-color .25s, color .25s, background .25s, opacity .3s;
+}
+@media (min-width: 1000px) { .opt { min-height: 62px; padding: 16px 18px 16px 20px; font-size: 1.02rem; } }
+.sweep::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: linear-gradient(120deg, rgba(228,252,68,0) 30%, rgba(228,252,68,.07) 50%, rgba(228,252,68,0) 70%); background-size: 250% 100%; background-position: 100% 0; transition: background-position .8s ease; }
+@media (hover: hover) {
+  .sweep:hover::before { background-position: 0 0; }
+  .opt:hover { border-color: rgba(228,252,68,.4); }
+  .link:hover { color: var(--text); }
+}
+.opt:active { transform: scale(.975); }   /* resposta tátil imediata no toque */
+.dot { flex: none; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line-2); display: grid; place-items: center; transition: border-color .25s, transform .3s cubic-bezier(.3,1.6,.5,1); }
+.dot::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--on-lime); transform: scale(0); transition: transform .3s cubic-bezier(.3,1.6,.5,1) .05s; }
+.picked { color: var(--on-lime) !important; border-color: var(--lime) !important; background: var(--lime) !important; box-shadow: 0 12px 40px -12px rgba(228,252,68,.7); }
+.picked .dot { border-color: var(--on-lime); transform: scale(1.1); }
+.picked .dot::after { transform: scale(1); }
+.opts.chosen .opt:not(.picked) { opacity: .28; transform: scale(.98); }
+.ripple { position: absolute; z-index: -1; border-radius: 50%; background: var(--lime); pointer-events: none; transform: translate(-50%, -50%) scale(0); }
+.q-foot { display: flex; justify-content: space-between; align-items: center; min-height: 44px; }
+.link { background: none; border: 0; color: var(--muted); font-size: 14px; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; padding: 10px 0; min-height: 44px; }
+.fly { position: fixed; left: 0; top: 0; z-index: 50; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 18px 4px rgba(228,252,68,.7); pointer-events: none; }
+
+.card { border-radius: var(--r); background: var(--surface); border: 1px solid var(--edge); padding: 18px; display: grid; gap: 6px; align-content: start; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.card.hot { border-color: rgba(228,252,68,.6); background: linear-gradient(150deg, rgba(228,252,68,.14), rgba(40,40,40,.88) 60%); }
+.card .mono { color: var(--muted); }
+.card.hot .mono { color: var(--lime); }
+.card b { font-family: var(--font-head); font-weight: 600; font-size: 1.15rem; letter-spacing: -0.015em; line-height: 1.3; }
+.card p { color: var(--text-2); font-size: .97rem; }
+
+.btn { position: relative; overflow: hidden; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 58px; padding: 16px 26px; border: 0; border-radius: var(--pill); background: var(--lime); color: var(--on-lime); font-family: var(--font-head); font-weight: 600; font-size: 16px; line-height: 1.3; text-align: center; cursor: pointer; box-shadow: 0 14px 40px -12px rgba(228,252,68,.65); transition: transform .15s, background .2s; }
+.btn::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,.55) 50%, transparent 65%); transform: translateX(-100%); animation: shine 3.4s ease-in-out infinite 1.2s; }
+@keyframes shine { 40%, 100% { transform: translateX(100%); } }
+@media (hover: hover) { .btn:hover { background: var(--lime-hover); } }
+.btn:active { transform: scale(.98); }
+.btn.ghost { background: var(--surface); color: var(--text); border: 1px solid var(--edge); box-shadow: none; }
+.btn.ghost::after, .btn.sm::after { display: none; }
+@media (hover: hover) { .btn.ghost:hover { background: rgba(52,52,52,.9); border-color: rgba(228,252,68,.4); } }
+.btn.sm { width: auto; min-height: 44px; padding: 10px 18px; font-size: 14px; box-shadow: none; }
+.btn .ripple { background: rgba(255,255,255,.45); }
+/* No celular o botão do resultado gruda no rodapé da tela: o próximo passo nunca fica escondido */
+.cta-sticky { position: sticky; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 5; }
+@media (min-width: 1000px) { .cta-sticky { position: relative; bottom: auto; } }
+
+.foot { font-size: 12px; color: var(--muted); text-align: center; padding: 6px 0 14px; line-height: 1.5; }
+.foot .demo-line { display: block; }
+.foot .link { font-size: 12px; min-height: 44px; padding: 12px 4px; }
+
+/* ===== TELA 2 · PÁGINA DO VÍDEO ===== */
+#view-vsl { max-width: 1080px; margin: 0 auto; padding-bottom: 104px; }
+.vsl-sec { padding-block: clamp(56px, 10vw, 104px); }
+.vsl-sec + .vsl-sec { border-top: 1px solid rgba(255,255,255,.06); }
+.head { display: grid; gap: 14px; margin-bottom: clamp(24px, 5vw, 40px); max-width: 760px; }
+.head h2 { font-size: clamp(1.55rem, 6vw, 2.5rem); line-height: 1.15; }
+.head p { color: var(--text-2); font-size: 1.05rem; max-width: 56ch; }
+.head .note, .note { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.tagx { justify-self: start; display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--lime); background: var(--lime-soft); border: 1px solid rgba(228,252,68,.25); border-radius: var(--pill); padding: 6px 12px; line-height: 1.4; }
+.tagx::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 8px var(--lime); }
+
+.hero { padding-top: clamp(16px, 4vw, 40px); display: grid; gap: 18px; justify-items: center; text-align: center; }
+.hero .tagx { justify-self: center; }
+.hero h1 { font-size: clamp(1.6rem, 6.6vw, 2.6rem); line-height: 1.14; max-width: 30ch; }
+.hero .lead { color: var(--text-2); font-size: clamp(1rem, 2.6vw, 1.1rem); max-width: 54ch; }
+.video { position: relative; width: min(100%, 720px); aspect-ratio: 16 / 9; border-radius: 22px; overflow: hidden; border: 1px solid rgba(228,252,68,.22); background: rgba(24,24,24,.6); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 30px 80px -30px rgba(0,0,0,.8), 0 0 0 6px rgba(255,255,255,.02); }
+.video canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.video .ui { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 16px; }
+.play { position: relative; display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 12px 24px; border-radius: var(--pill); border: 0; background: var(--lime); color: var(--on-lime); font-family: var(--font-head); font-weight: 600; font-size: 15px; cursor: pointer; }
+.play::before { content: ""; position: absolute; inset: -6px; border-radius: inherit; border: 2px solid rgba(228,252,68,.6); animation: ring 2s ease-out infinite; }
+@keyframes ring { from { transform: scale(.92); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
+.video .vtag { position: absolute; left: 14px; top: 14px; }
+.video iframe, .video video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; }
+.hero .cta { width: min(100%, 440px); display: grid; gap: 8px; }
+@media (min-width: 860px) { .video { width: min(100%, 720px, max(440px, calc((100vh - 450px) * 16 / 9))); width: min(100%, 720px, max(440px, calc((100svh - 450px) * 16 / 9))); } } /* em notebook de tela baixa o vídeo encolhe e o botão principal aparece sem rolar */
+.vnote { font-size: 14px; color: var(--muted); min-height: 1.4em; max-width: 48ch; }
+
+.recap { display: grid; gap: 12px; }
+@media (min-width: 860px) { .recap { grid-template-columns: 1.1fr .9fr; } }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.chip { display: grid; gap: 2px; padding: 10px 14px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid var(--edge); }
+.chip .mono { font-size: 9.5px; }
+.chip b { font-family: var(--font-head); font-weight: 600; font-size: .95rem; }
+
+.pains { display: grid; gap: 12px; }
+@media (min-width: 860px) { .pains { grid-template-columns: repeat(3, 1fr); } }
+.pain { position: relative; overflow: hidden; isolation: isolate; border-radius: var(--r); background: var(--surface); border: 1px solid var(--edge); padding: 22px 20px; display: grid; gap: 10px; align-content: start; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: border-color .3s; }
+@media (hover: hover) { .pain:hover { border-color: rgba(228,252,68,.35); } }
+.pain .n { font-family: var(--font-mono); font-size: 12px; color: var(--lime); }
+.pain p { font-size: 1.05rem; line-height: 1.5; font-weight: 500; }
+.turn { margin-top: 28px; display: grid; gap: 18px; max-width: 760px; }
+.turn p { color: var(--text-2); font-size: 1.05rem; }
+.turn .big { font-family: var(--font-head); font-weight: 700; font-size: clamp(1.3rem, 4.8vw, 2rem); line-height: 1.25; letter-spacing: -0.025em; color: var(--text); }
+.turn .big em { font-style: normal; color: var(--lime); }
+
+.steps { position: relative; display: grid; gap: 14px; padding-left: 34px; max-width: 760px; }
+.steps .rail { position: absolute; left: 11px; top: 8px; bottom: 8px; width: 2px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.steps .rail i { display: block; width: 100%; height: 0; background: var(--lime); box-shadow: 0 0 12px var(--lime); border-radius: 2px; }
+.step { position: relative; border-radius: var(--r); background: var(--surface); border: 1px solid var(--edge); padding: 20px; display: grid; gap: 6px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: border-color .4s; }
+.step::before { content: ""; position: absolute; left: -29px; top: 24px; width: 12px; height: 12px; border-radius: 50%; background: var(--bg); border: 2px solid var(--line-2); transition: all .4s; }
+.step.on { border-color: rgba(228,252,68,.35); }
+.step.on::before { background: var(--lime); border-color: var(--lime); box-shadow: 0 0 12px var(--lime); }
+.step h3 { font-size: 1.15rem; letter-spacing: -0.015em; }
+.step p { color: var(--text-2); }
+
+.formats { display: grid; gap: 14px; }
+@media (min-width: 860px) { .formats { grid-template-columns: 1fr 1fr; align-items: stretch; } }
+/* Coluna flexível com o botão empurrado para o fim: os dois botões ficam sempre na mesma linha */
+.format { position: relative; overflow: hidden; isolation: isolate; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--edge); padding: 24px 20px; display: flex; flex-direction: column; gap: 16px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.format.rec { border-color: rgba(228,252,68,.7); background: linear-gradient(160deg, rgba(228,252,68,.12), rgba(40,40,40,.86) 50%); box-shadow: 0 20px 60px -30px rgba(228,252,68,.5); }
+.format .top-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.format h3 { font-size: 1.35rem; }
+.format .desc { color: var(--text-2); }
+.format .btn { margin-top: auto; }
+.items { list-style: none; margin: 0; padding: 0; display: grid; }
+.items li { display: flex; justify-content: space-between; gap: 14px; align-items: baseline; padding: 11px 0; border-top: 1px solid rgba(255,255,255,.07); font-size: .97rem; }
+.ph { font-family: var(--font-mono); font-size: 12px; color: var(--lime); border: 1px dashed rgba(228,252,68,.45); border-radius: 8px; padding: 2px 8px; white-space: nowrap; }
+.price { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.12); }
+.price .ph { font-size: 15px; padding: 5px 12px; }
+
+/* Depoimentos: no celular viram carrossel que encosta na borda da tela, com pontos de posição */
+.quotes { display: grid; grid-auto-flow: column; grid-auto-columns: 84%; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain;
+  margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
+  scroll-padding-inline: max(16px, env(safe-area-inset-left, 0px)); }
+.quotes::-webkit-scrollbar { display: none; }
+@media (min-width: 860px) { .quotes { grid-auto-flow: row; grid-template-columns: repeat(3, 1fr); overflow: visible; margin-inline: 0; padding-inline: 0; } }
+.quote { scroll-snap-align: start; margin: 0; border-radius: var(--r); background: var(--surface); border: 1px solid var(--edge); padding: 22px 20px; display: grid; gap: 16px; align-content: space-between; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.quote p { font-size: 1.05rem; line-height: 1.55; }
+.quote footer { display: grid; gap: 6px; font-size: .9rem; color: var(--muted); }
+.dots { display: flex; gap: 6px; justify-content: center; margin-top: 16px; }
+.dots i { width: 6px; height: 6px; border-radius: 99px; background: var(--line-2); transition: width .3s var(--ease), background .3s; }
+.dots i.on { width: 20px; background: var(--lime); }
+@media (min-width: 860px) { .dots { display: none; } }
+
+.faq { display: grid; gap: 10px; max-width: 780px; }
+.qa { border-radius: var(--r); background: var(--surface); border: 1px solid var(--edge); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: border-color .3s; }
+.qa.open { border-color: rgba(228,252,68,.35); }
+.qa button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 20px; background: none; border: 0; text-align: left; cursor: pointer; font-family: var(--font-head); font-weight: 500; font-size: 1.02rem; line-height: 1.4; min-height: 60px; }
+.qa .pm { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--line-2); position: relative; transition: all .3s; }
+.qa .pm::before, .qa .pm::after { content: ""; position: absolute; left: 50%; top: 50%; width: 10px; height: 1.5px; background: var(--text-2); transform: translate(-50%, -50%); transition: transform .3s var(--ease), background .3s; }
+.qa .pm::after { transform: translate(-50%, -50%) rotate(90deg); }
+.qa.open .pm { border-color: var(--lime); background: var(--lime); }
+.qa.open .pm::before, .qa.open .pm::after { background: var(--on-lime); }
+.qa.open .pm::after { transform: translate(-50%, -50%) rotate(0deg); }
+.qa .ans { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .4s var(--ease); }
+.qa.open .ans { grid-template-rows: 1fr; }
+.qa .ans > div { overflow: hidden; }
+.qa .ans p { padding: 0 20px 20px; color: var(--text-2); }
+
+.final { border-radius: 28px; border: 1px solid rgba(228,252,68,.3); background: linear-gradient(160deg, rgba(228,252,68,.14), rgba(32,32,32,.85) 55%); padding: clamp(32px, 6vw, 64px) clamp(20px, 5vw, 56px); display: grid; gap: 22px; justify-items: start; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.final h2 { font-size: clamp(1.5rem, 5.6vw, 2.4rem); line-height: 1.18; max-width: 22ch; }
+.final p { color: var(--text-2); max-width: 50ch; }
+.final .btn { max-width: 440px; }
+.legal { padding-top: 40px; display: grid; gap: 10px; font-size: 13px; color: var(--muted); max-width: 70ch; }
+.legal strong { color: var(--text); font-family: var(--font-head); font-weight: 600; }
+
+/* Garantia e vagas, linha do tempo dos 90 dias e plano de 3 passos do diagnóstico */
+.assure { display: grid; gap: 12px; margin-top: 14px; }
+@media (min-width: 860px) { .assure { grid-template-columns: 1fr 1fr; } }
+.assure .card b { font-size: 1.05rem; }
+.timeline { display: grid; gap: 12px; }
+@media (min-width: 860px) { .timeline { grid-template-columns: repeat(4, 1fr); } }
+.tl { border-radius: var(--r); background: var(--surface); border: 1px solid var(--edge); padding: 20px; display: grid; gap: 8px; align-content: start; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.tl h3 { font-size: 1.1rem; letter-spacing: -0.015em; line-height: 1.3; }
+.tl p { color: var(--text-2); font-size: .97rem; }
+.plan { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; counter-reset: plan; }
+.plan li { position: relative; padding-left: 36px; color: var(--text); font-size: .97rem; line-height: 1.5; counter-increment: plan; }
+.plan li::before { content: counter(plan); position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--lime); color: var(--on-lime); font-family: var(--font-head); font-weight: 600; font-size: 12.5px; display: grid; place-items: center; }
+.first { margin-top: 6px; padding-top: 10px; border-top: 1px solid rgba(228,252,68,.25); display: grid; gap: 4px; }
+.first .mono { color: var(--lime); }
+.first span:last-child { color: var(--text); font-weight: 500; line-height: 1.5; }
+.card .next { font-size: .9rem; color: var(--muted); }   /* gancho discreto para a próxima tela */
+
+/* Barra fixa só no celular, e some quando os cartões de formato ou a chamada final já mostram botões */
+.dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; justify-content: center; pointer-events: none;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: linear-gradient(to top, rgba(29,29,29,.95), rgba(29,29,29,0)); transform: translateY(110%); transition: transform .5s var(--ease); }
+.dock.show { transform: none; }
+.dock .btn { pointer-events: auto; max-width: 440px; min-height: 56px; }
+@media (min-width: 860px) { .dock { display: none !important; } }
+
+/* Prévia da mensagem (só na demonstração, enquanto o número do WhatsApp não está configurado) */
+.sheet { position: fixed; inset: 0; z-index: 80; display: grid; align-items: end; justify-items: center; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+@media (min-width: 700px) { .sheet { align-items: center; } }
+.sheet-card { width: 100%; max-width: 440px; max-height: 100%; overflow: auto; border-radius: var(--r-lg); background: #232323; border: 1px solid var(--edge); padding: 22px 20px 18px; display: grid; gap: 14px; box-shadow: 0 30px 80px -20px rgba(0,0,0,.8); }
+.sheet-card h3 { font-size: 1.2rem; line-height: 1.3; }
+.bubble { justify-self: end; max-width: 94%; background: rgba(228,252,68,.12); border: 1px solid rgba(228,252,68,.3); color: #F2F2F2; border-radius: 16px 16px 4px 16px; padding: 12px 14px; font-size: 14.5px; line-height: 1.5; white-space: pre-wrap; }
+.sheet-note { font-size: 13.5px; color: var(--muted); }
+
+/* Revelar ao rolar: só liga quando o navegador suporta; sem isso, tudo aparece normalmente */
+.io .rv { opacity: 0; transform: translateY(26px); filter: blur(6px); transition: opacity .8s var(--ease), transform .8s var(--ease), filter .8s var(--ease); }
+.io .rv.in { opacity: 1; transform: none; filter: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+  .io .rv { opacity: 1; transform: none; filter: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="bgl" id="bg-gl" aria-hidden="true"><canvas id="gl"></canvas></div>
+<div class="shade" aria-hidden="true"></div>
+<div class="bgl" id="bg-chart" aria-hidden="true"><canvas id="chart-bg"></canvas></div>
+
+<header class="top">
+  <a class="brand" href="#" id="home" aria-label="Maicon, mentoria de crescimento nas redes. Voltar ao início"><b>Maicon<span>.</span></b><small>Mentoria de crescimento</small></a>
+  <a class="btn sm top-cta" href="#" data-wa="auto" data-from="topo">Quero o Maicon no meu perfil</a>
+</header>
+
+<!-- ===================== TELA 1 · QUIZ ===================== -->
+<main id="view-quiz" aria-label="Quiz">
+  <h1 class="sr-only">Diagnóstico gratuito: o que trava o seu crescimento nas redes</h1>
+  <div class="layout">
+    <div class="slot" id="slot" role="img" aria-label="Gráfico do seu caminho de crescimento até a sua meta. A linha sobe a cada resposta."><canvas id="chart"></canvas><div class="tip" id="tip" hidden></div></div>
+    <div class="quiz" id="stage"></div>
+  </div>
+  <p class="foot"><span id="foot-txt">Leva 1 minuto e não pede cadastro. O resultado aparece na hora.</span><span class="demo-line" data-demo>Demonstração · <button class="link" type="button" id="skip">Ver a página do vídeo</button></span></p>
+  <p class="sr-only" id="live" aria-live="polite"></p>
+</main>
+
+<!-- ===================== TELA 2 · PÁGINA DO VÍDEO ===================== -->
+<main id="view-vsl" aria-label="Página do vídeo" hidden>
+  <!-- 1. HERO: promessa + mecanismo único (régua de anúncio) -->
+  <section class="vsl-sec hero" id="video">
+    <span class="tagx" id="v-tag">Para quem posta e não cresce</span>
+    <h1 id="v-title" tabindex="-1">Cresça nas redes com a régua de quem paga por cada visualização.</h1>
+    <p class="lead" id="v-lead">O Maicon roda anúncios na Nextrix e paga por cada visualização: sabe pelos números o que faz alguém parar de rolar o feed. Na mentoria, ele usa essa régua para os seus vídeos chegarem em mais gente.</p>
+    <div class="video" id="video-frame">
+      <canvas id="v-canvas" aria-hidden="true"></canvas>
+      <span class="mono vtag">Vídeo do Maicon</span>
+      <div class="ui" id="video-ui"><button class="play" type="button" id="play">Assistir agora</button></div>
+    </div>
+    <div class="cta">
+      <a class="btn" href="#" data-wa="auto" data-from="video" id="cta-hero">Quero que o Maicon olhe o meu perfil</a>
+      <span class="mono">Atendimento individual · Direto com o Maicon</span>
+    </div>
+    <p class="vnote" id="v-note">Assista até o fim. No final ele mostra como funciona cada formato.</p>
+  </section>
+
+  <!-- 2. REFORÇO: o diagnóstico da pessoa + amostra grátis (3 primeiros passos) -->
+  <section class="vsl-sec" id="resumo">
+    <div class="head rv"><span class="tagx">Seu diagnóstico</span><h2 class="split">O que o Maicon faria no seu perfil primeiro</h2></div>
+    <div class="recap rv" id="recap"></div>
+  </section>
+
+  <!-- 3. FACA NA FERIDA -->
+  <section class="vsl-sec" id="dores">
+    <div class="head rv"><span class="tagx">Se isso é você</span><h2 class="split">O problema não é o algoritmo.</h2></div>
+    <div class="pains">
+      <div class="pain sweep rv"><span class="n">01</span><p>Você grava, edita, posta, e o vídeo morre com 200 visualizações.</p></div>
+      <div class="pain sweep rv"><span class="n">02</span><p>Você copia o formato de quem cresce, e no seu perfil não funciona.</p></div>
+      <div class="pain sweep rv"><span class="n">03</span><p>Um vídeo até vai bem, mas você não sabe por quê e não consegue repetir.</p></div>
+    </div>
+    <div class="turn rv">
+      <p>Cada semana assim são horas de gravação que ninguém vê. E cada mês parado é público seguindo quem começou depois de você.</p>
+      <p class="big">E se alguém que <em>paga por cada visualização</em> abrisse o seu perfil e dissesse o que cortar, o que manter e o que postar amanhã?</p>
+    </div>
+  </section>
+
+  <!-- MECANISMO -->
+  <section class="vsl-sec" id="como">
+    <div class="head rv"><span class="tagx">O método</span><h2 class="split">Orgânico com régua de anúncio.</h2><p>Em anúncio, vídeo que não segura atenção custa dinheiro na hora. Quem roda tráfego aprende rápido o que faz alguém parar de rolar e assistir até o fim. O Maicon leva essa régua para o seu conteúdo orgânico.</p><p class="note" data-demo>Etapas e entregas de exemplo. O Maicon ajusta o que entra.</p></div>
+    <div class="steps" id="steps">
+      <div class="rail"><i id="rail"></i></div>
+      <div class="step rv"><span class="mono lime">Etapa 1 · Auditoria ao vivo</span><h3>Ele abre o seu perfil e mostra onde as pessoas desistem</h3><p>Bio, destaques, fixados e os primeiros segundos dos seus vídeos. Você vê o problema na tela, não numa aula gravada.</p></div>
+      <div class="step rv"><span class="mono lime">Etapa 2 · Ganchos que seguram</span><h3>Você sai com ganchos e roteiros prontos para o seu nicho</h3><p>No formato que segura atenção em anúncio, adaptado ao seu jeito de falar.</p></div>
+      <div class="step rv"><span class="mono lime">Etapa 3 · Rotina de 30 dias</span><h3>Um calendário que cabe na sua semana</h3><p>O que postar, quando e por quê. O objetivo é postar melhor, não postar mais.</p></div>
+    </div>
+  </section>
+
+  <!-- 4. OFERTA: entregas concretas, ancoragem, garantia e vagas -->
+  <section class="vsl-sec" id="formatos">
+    <div class="head rv"><span class="tagx">O que você leva</span><h2 class="split">Dois jeitos de ter o Maicon no seu perfil.</h2><p class="note" data-demo>Entregas e valores de exemplo. O Maicon define o que entra e o preço real.</p></div>
+    <div class="formats">
+      <article class="format rv" data-kind="aula">
+        <div class="top-row"><h3>Sessão individual</h3><span class="tagx rec-badge" hidden>Indicado no seu diagnóstico</span></div>
+        <p class="desc">Um encontro ao vivo de <span class="ph">[duração]</span>. Você sai da chamada com o perfil ajustado e o plano na mão.</p>
+        <ul class="items">
+          <li><span>Auditoria do seu perfil ao vivo</span><span class="ph">R$ [valor]</span></li>
+          <li><span>Bio, destaques e fixados reescritos na chamada</span><span class="ph">R$ [valor]</span></li>
+          <li><span>10 ganchos de vídeo escritos para o seu nicho</span><span class="ph">R$ [valor]</span></li>
+          <li><span>Calendário de conteúdo de 30 dias</span><span class="ph">R$ [valor]</span></li>
+          <li><span>Bônus: gravação da sessão</span><span class="ph">R$ [valor]</span></li>
+        </ul>
+        <div class="price"><span class="mono">Tudo isso por</span><span class="ph">R$ [valor]</span></div>
+        <a class="btn ghost" href="#" data-wa="aula" data-from="formato-aula">Quero a sessão individual</a>
+      </article>
+      <article class="format rv" data-kind="mensal">
+        <div class="top-row"><h3>Mentoria de 30 dias</h3><span class="tagx rec-badge" hidden>Indicado no seu diagnóstico</span></div>
+        <p class="desc">O Maicon acompanha o seu perfil o mês inteiro e corrige a rota toda semana, em cima dos seus números.</p>
+        <ul class="items">
+          <li><span>Tudo da sessão individual</span><span class="ph">R$ [valor]</span></li>
+          <li><span>4 encontros individuais, um por semana</span><span class="ph">R$ [valor]</span></li>
+          <li><span>Revisão dos seus vídeos antes de postar</span><span class="ph">R$ [valor]</span></li>
+          <li><span>Leitura semanal dos seus números</span><span class="ph">R$ [valor]</span></li>
+          <li><span>Bônus: WhatsApp direto com o Maicon no mês</span><span class="ph">R$ [valor]</span></li>
+        </ul>
+        <div class="price"><span class="mono">Tudo isso por</span><span class="ph">R$ [valor]</span></div>
+        <a class="btn ghost" href="#" data-wa="mensal" data-from="formato-mensal">Quero a mentoria de 30 dias</a>
+      </article>
+    </div>
+    <div class="assure rv">
+      <div class="card"><span class="mono lime">Garantia</span><b><span class="ph">[o Maicon define a garantia]</span></b><p>Exemplo: se você sair da primeira sessão sem um plano claro para o seu perfil, ele faz outra sem custo.</p></div>
+      <div class="card"><span class="mono lime">Vagas</span><b><span class="ph">[X]</span> vagas por mês</b><p>O atendimento é individual e direto com o Maicon. Por isso as vagas são poucas.</p></div>
+    </div>
+  </section>
+
+  <!-- 5. PROVA (modelos marcados até chegarem depoimentos reais) -->
+  <section class="vsl-sec" id="provas">
+    <div class="head rv"><span class="tagx">Prova</span><h2 class="split">Antes e depois de quem aplicou.</h2></div>
+    <div class="quotes rv" id="quotes">
+      <blockquote class="quote"><p>“Eu postava todo dia e não passava de [X] seguidores. Em [Y] semanas com o plano do Maicon, cheguei a [Z].”</p><footer><span>[Nome], [@perfil]</span><span class="mono lime">Exemplo · trocar por depoimento real com print</span></footer></blockquote>
+      <blockquote class="quote"><p>“Meus vídeos morriam em [X] visualizações. Depois de trocar os ganchos, o melhor passou de [Y].”</p><footer><span>[Nome], [@perfil]</span><span class="mono lime">Exemplo · trocar por depoimento real com print</span></footer></blockquote>
+      <blockquote class="quote"><p>“Eu viralizei uma vez e depois mais nada. Hoje [X] dos meus últimos [Y] vídeos passaram de [Z] visualizações.”</p><footer><span>[Nome], [@perfil]</span><span class="mono lime">Exemplo · trocar por depoimento real com print</span></footer></blockquote>
+    </div>
+    <div class="dots" id="dots" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+  </section>
+
+  <!-- 6. TRANSFORMAÇÃO -->
+  <section class="vsl-sec" id="caminho">
+    <div class="head rv"><span class="tagx">Os próximos 90 dias</span><h2 class="split">O que muda, e quando.</h2></div>
+    <div class="timeline">
+      <div class="tl rv"><span class="mono lime">Semana 1</span><h3>Perfil ajustado e ganchos na mão</h3><p>Você para de travar na hora de postar.</p></div>
+      <div class="tl rv"><span class="mono lime">Dia 30</span><h3>Rotina rodando</h3><p>Você sabe quais formatos seguram atenção no seu nicho.</p></div>
+      <div class="tl rv"><span class="mono lime">Dia 90</span><h3>Você lê os próprios números</h3><p>Quando um vídeo não entrega, você sabe o que mudar.</p></div>
+      <div class="tl rv"><span class="mono lime">Daí em diante</span><h3>Crescer vira rotina</h3><p>Cada vídeo novo parte do que já funcionou. Viralizar deixa de ser sorte.</p></div>
+    </div>
+  </section>
+
+  <!-- OBJEÇÕES -->
+  <section class="vsl-sec" id="duvidas">
+    <div class="head rv"><span class="tagx">Dúvidas</span><h2 class="split">Antes de chamar no WhatsApp.</h2><p class="note" data-demo>Respostas de exemplo. O Maicon confirma cada uma.</p></div>
+    <div class="faq rv" id="faq">
+      <div class="qa"><button type="button" aria-expanded="false" aria-controls="r1">Já fiz curso de Instagram e não funcionou. O que muda aqui?<span class="pm" aria-hidden="true"></span></button><div class="ans" id="r1"><div><p>Curso é igual para todo mundo. Aqui o Maicon trabalha no seu perfil, com os seus vídeos e os seus números, ao vivo. Você não precisa adaptar nada sozinho.</p></div></div></div>
+      <div class="qa"><button type="button" aria-expanded="false" aria-controls="r2">Preciso ter muitos seguidores para começar?<span class="pm" aria-hidden="true"></span></button><div class="ans" id="r2"><div><p>Não. O diagnóstico mostra o seu ponto de partida e o plano sai dele, seja para sair do zero ou para escalar.</p></div></div></div>
+      <div class="qa"><button type="button" aria-expanded="false" aria-controls="r3">Preciso aparecer nos vídeos?<span class="pm" aria-hidden="true"></span></button><div class="ans" id="r3"><div><p>Não necessariamente. O formato é escolhido para o seu nicho e o seu jeito. Tem nicho que cresce sem mostrar o rosto.</p></div></div></div>
+      <div class="qa"><button type="button" aria-expanded="false" aria-controls="r4">Tenho pouco tempo. Dá para fazer?<span class="pm" aria-hidden="true"></span></button><div class="ans" id="r4"><div><p>Dá. O plano é montado para o tempo que você tem. O objetivo é postar melhor, não postar mais.</p></div></div></div>
+      <div class="qa"><button type="button" aria-expanded="false" aria-controls="r5">O Maicon garante que eu vou viralizar?<span class="pm" aria-hidden="true"></span></button><div class="ans" id="r5"><div><p>Não. Ninguém pode garantir viralização nem número de seguidores, e desconfie de quem garante. O crescimento depende de nicho, conteúdo, constância e execução. O que o Maicon entrega é método, plano e acompanhamento para os seus vídeos terem mais chance de ir longe.</p></div></div></div>
+      <div class="qa"><button type="button" aria-expanded="false" aria-controls="r6">Como funciona o pagamento?<span class="pm" aria-hidden="true"></span></button><div class="ans" id="r6"><div><p>O Maicon combina o valor e a forma de pagamento com você no WhatsApp, depois de entender o seu momento.</p></div></div></div>
+    </div>
+  </section>
+
+  <!-- 7. ÚLTIMA CHAMADA + 8. RODAPÉ -->
+  <section class="vsl-sec" id="decisao">
+    <div class="final rv" id="final">
+      <span class="tagx">Sua decisão</span>
+      <h2 class="split">Mais 90 dias de vídeo sem alcance, ou 90 dias crescendo com método?</h2>
+      <p>Chame o Maicon no WhatsApp. Se você fez o diagnóstico, as suas respostas já vão junto e ele começa a conversa sabendo onde você trava.</p>
+      <a class="btn" href="#" data-wa="auto" data-from="final" id="cta-final">Sim, quero o meu perfil crescendo</a>
+      <button class="link" type="button" id="redo">Refazer o diagnóstico</button>
+    </div>
+    <div class="legal">
+      <strong>Maicon · Mentoria de crescimento nas redes</strong>
+      <p>Tráfego pago para empresas é com a Nextrix, agência de marketing do Maicon. Esta mentoria é sobre crescer nas redes.</p>
+      <p>[Razão social] · CNPJ [00.000.000/0000-00] · [e-mail de contato]</p>
+      <p>Os resultados variam conforme nicho, conteúdo, constância e contexto de cada pessoa. Esta página não promete viralização nem número de seguidores.</p>
+      <p>As respostas do diagnóstico não são armazenadas. Elas só seguem para o WhatsApp se você tocar no botão.</p>
+      <p data-demo>Demonstração: entregas, valores, garantia, vagas, depoimentos e WhatsApp são exemplos.</p>
+    </div>
+  </section>
+</main>
+
+<div class="dock" id="dock" hidden><a class="btn" href="#" data-wa="auto" data-from="barra">Quero o Maicon no meu perfil</a></div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <span class="mono lime">Prévia da mensagem</span>
+    <h3 id="sheet-title">É isso que chega no WhatsApp do Maicon</h3>
+    <div class="bubble" id="sheet-msg"></div>
+    <p class="sheet-note">Na versão publicada, este botão abre o WhatsApp com a mensagem já escrita. A pessoa só toca em enviar.</p>
+    <button class="btn ghost" type="button" id="sheet-close">Fechar</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* =====================================================================
+     CONFIGURAÇÃO · o Maicon troca só este bloco
+     ===================================================================== */
+  var CONFIG = {
+    whatsapp: "55XXXXXXXXXXX",        // DDI + DDD + número, só dígitos. Ex.: "5531999999999"
+    video: { type: null, src: "" },   // YouTube: { type: "youtube", src: "ID_DO_VIDEO" } · Arquivo: { type: "mp4", src: "video.mp4" }
+    demo: true                        // true mostra os avisos de demonstração e o atalho para a página do vídeo
+  };
+
+  var WA_OK = /^\d{12,13}$/.test(CONFIG.whatsapp);
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var EASE = "cubic-bezier(.2,.8,.2,1)", TAU = Math.PI * 2;
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  function el(t, c, x) { var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function now() { return performance.now(); }
+
+  var viewQuiz = $("#view-quiz"), viewVsl = $("#view-vsl"), stage = $("#stage"), slot = $("#slot"), tip = $("#tip"), live = $("#live");
+  if (!CONFIG.demo) $$("[data-demo]").forEach(function (n) { n.remove(); });
+
+  /* Medição: não carrega nada sozinha. Só passa a funcionar se o Pixel da Meta ou o GA4/GTM forem
+     instalados depois, junto com o aviso de cookies (LGPD). Serve para ver em qual pergunta as pessoas saem. */
+  function track(name, data) {
+    try {
+      var d = data || {};
+      if (window.dataLayer && window.dataLayer.push) window.dataLayer.push(Object.assign({ event: name }, d));
+      if (typeof window.fbq === "function") window.fbq("trackCustom", name, d);
+    } catch (e) {}
+  }
+
+  /* =====================================================================
+     CONTEÚDO DO QUIZ · d = quanto cada resposta faz a linha subir
+     ===================================================================== */
+  var Q = [
+    { k: "Momento", q: "Como está o seu perfil hoje?", o: ["Começando do zero, quase sem seguidores", "Posto há meses e continuo no mesmo lugar", "Cresço, mas devagar demais para o esforço", "Já tenho público, mas estacionei"], s: ["Do zero", "Parado", "Cresce devagar", "Estacionou"], d: [4, 7, 12, 18] },
+    { k: "Meta", q: "Daqui a 90 dias, o que faria você comemorar?", o: ["Bater meus primeiros mil seguidores", "Ver o perfil crescer todo mês, sem travar", "Ver um vídeo meu viralizar de verdade", "Virar referência no meu nicho"], s: ["Mil seguidores", "Crescer todo mês", "Viralizar", "Referência no nicho"], d: [5, 5, 5, 5] },
+    { k: "Perfil", q: "Alguém novo entra no seu perfil. Ele segue?", o: ["Acho que não, nem eu sei dizer do que é", "Só se já tiver gostado de um vídeo", "Entende o assunto, mas não vê motivo", "Segue, fica claro o que ele ganha"], s: ["Perfil confuso", "Depende do vídeo", "Sem motivo para seguir", "Perfil claro"], d: [2, 6, 9, 14] },
+    { k: "Conteúdo", q: "Na hora de gravar, o que mais acontece?", o: ["Travo e não sei o que postar", "Copio uma trend e torço", "Gravo, mas ninguém assiste até o fim", "Já sei o que funciona, quero mais"], s: ["Não sabe o que postar", "Copia trend", "Vídeo não prende", "Conteúdo validado"], d: [2, 5, 9, 14] },
+    { k: "Constância", q: "Nos últimos 30 dias, você postou...", o: ["Quase nada, sumi de novo", "Em rajadas: posto muito e depois sumo", "Toda semana, mesmo sem vontade", "Todo dia, sem falhar"], s: ["Sumiu", "Em rajadas", "Toda semana", "Todo dia"], d: [2, 5, 9, 12] },
+    { k: "Alcance", q: "Depois que você posta, o vídeo...", o: ["Empaca nas mesmas 200 visualizações", "Às vezes estoura, e eu não sei por quê", "Tem visualização, mas quase ninguém segue", "Viraliza às vezes, quero que seja sempre"], s: ["Pouco alcance", "Acerta sem saber", "Não vira seguidor", "Viraliza às vezes"], d: [3, 6, 7, 14] },
+    { k: "Formato", q: "Como você quer o Maicon no seu perfil?", o: ["Uma sessão direta, saio com o plano pronto", "Do meu lado o mês inteiro, ajustando comigo", "Ainda não sei, quero que ele indique"], s: ["Sessão direta", "Acompanhamento", "Quer indicação"], d: [4, 4, 4] }
+  ];
+  // nome da meta escolhida na pergunta 2: vira o rótulo da linha tracejada do gráfico
+  var GOALS = ["PRIMEIROS MIL SEGUIDORES", "CRESCER TODO MÊS", "VIRALIZAR", "REFERÊNCIA NO NICHO"];
+  var START = 8, GOAL = 92, DEMO_ANS = [1, 1, 1, 1, 1, 1, 1];
+  var GARGALOS = {
+    pos: { id: "pos", name: "Posicionamento", is: "o seu perfil", tag: "Para quem não ganha seguidor",
+      text: "Quem chega no seu perfil decide em segundos se segue. Hoje ele não deixa claro do que você fala nem o que a pessoa ganha te seguindo, e cada visita vai embora.",
+      title: "Quem entra no seu perfil vai embora sem seguir. Veja como mudar isso.",
+      plan: ["Reescrever a bio em uma frase: sobre o que você posta e o que a pessoa ganha te seguindo.", "Escolher 3 destaques que mostram quem você é e o seu melhor conteúdo.", "Fixar os 3 vídeos que mais mostram por que vale a pena te seguir."] },
+    con: { id: "con", name: "Conteúdo que prende", is: "o começo dos seus vídeos", tag: "Para quem não tem alcance",
+      text: "Seus vídeos perdem a pessoa nos primeiros segundos. A plataforma entende que o conteúdo é fraco e para de entregar, e o esforço de gravar vai para o lixo.",
+      title: "Seus vídeos perdem a pessoa em 3 segundos. Veja como prender até o fim.",
+      plan: ["Abrir cada vídeo com um gancho que promete algo nos 3 primeiros segundos.", "Cortar tudo que não segura atenção: introdução, vinheta e enrolação.", "Repetir o formato que já funcionou, em vez de inventar um novo toda semana."] },
+    rot: { id: "rot", name: "Constância", is: "a sua constância", tag: "Para quem posta e some",
+      text: "Você posta em rajadas e some. Cada pausa zera o que você construiu, e a plataforma passa a entregar para quem aparece toda semana.",
+      title: "Pare de postar em rajadas. Veja o plano que cabe na sua semana.",
+      plan: ["Definir 3 formatos fixos que você grava sem precisar pensar.", "Gravar a semana inteira em uma tarde.", "Seguir um calendário de 30 dias, sem depender de inspiração."] },
+    num: { id: "num", name: "Leitura dos números", is: "a leitura dos números", tag: "Para quem acerta sem saber",
+      text: "Quando um vídeo vai bem, você não sabe por quê. Sem ler os números, cada post vira aposta e o crescimento fica dependendo de sorte.",
+      title: "Viralizar uma vez é sorte. Veja como transformar isso em método.",
+      plan: ["Olhar quanto cada vídeo segura a pessoa nos 3 primeiros segundos.", "Descobrir qual formato traz seguidor, não só visualização.", "Repetir o que funcionou antes de testar uma ideia nova."] }
+  };
+
+  var a = [], step = 0, busy = false, finished = false, gen = 0;
+  function vals(ans) { var v = [START]; for (var i = 0; i < ans.length; i++) v.push(Math.min(100, v[i] + Q[i].d[ans[i]])); return v; }
+  // Onde a pessoa trava = o pilar com a menor nota (perfil, conteúdo, constância, leitura dos números)
+  function gargalo() {
+    var sc = { pos: [10, 35, 55, 90][a[2]], con: [15, 30, 20, 88][a[3]], rot: [10, 20, 70, 90][a[4]], num: [45, 15, 45, 60][a[5]] };
+    if (a[5] === 2) sc.pos = Math.min(sc.pos, 20);   // tem visualização e ninguém segue: o perfil não convence quem chega
+    var k = "pos"; ["con", "rot", "num"].forEach(function (x) { if (sc[x] < sc[k]) k = x; });
+    return GARGALOS[k];
+  }
+  // Formato indicado: respeita a preferência; sem preferência, quem está no começo ou trava na constância vai para o acompanhamento
+  function mensal() { if (a[6] === 0) return false; if (a[6] === 1) return true; return a[0] <= 1 || gargalo().id === "rot"; }
+
+  /* =====================================================================
+     GRÁFICO · desenhado em canvas, sem biblioteca
+     ===================================================================== */
+  var anim = { target: 0, shown: 0, proj: 0, projTarget: 0, pulses: [], boost: 0, ghost: null, ghostA: 0, hover: -1, flash: 0 };
+
+  function Chart(canvas, onResize) {
+    this.c = canvas; this.ctx = canvas.getContext("2d"); this.W = 0; this.H = 0;
+    var self = this;
+    this.resize = function () {
+      var d = Math.min(window.devicePixelRatio || 1, 2);
+      self.W = canvas.clientWidth; self.H = canvas.clientHeight;
+      canvas.width = Math.max(1, Math.round(self.W * d)); canvas.height = Math.max(1, Math.round(self.H * d));
+      self.ctx.setTransform(d, 0, 0, d, 0, 0);
+      if (onResize) onResize();
+    };
+    if (window.ResizeObserver) new ResizeObserver(this.resize).observe(canvas); else window.addEventListener("resize", this.resize);
+    this.resize();
+  }
+  function geo(box) {
+    var g = { x0: box.x0, x1: box.x1, y0: box.y0, y1: box.y1 };
+    g.split = g.x0 + (g.x1 - g.x0) * 0.64;                       // à direita do corte: "próximos 90 dias"
+    g.X = function (i) { return g.x0 + (i / Q.length) * (g.split - g.x0); };
+    g.Y = function (v) { return g.y1 - (clamp(v, 0, 100) / 100) * (g.y1 - g.y0); };
+    return g;
+  }
+  function curve(path, pts) {
+    path.moveTo(pts[0].x, pts[0].y);
+    for (var m = 1; m < pts.length; m++) { var p0 = pts[m - 1], p1 = pts[m], cx = (p0.x + p1.x) / 2; path.bezierCurveTo(cx, p0.y, cx, p1.y, p1.x, p1.y); }
+  }
+  // Brilho com traços sobrepostos em vez de shadowBlur: o mesmo efeito, bem mais leve em celular simples
+  function glowStroke(ctx, path, w) {
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.strokeStyle = "rgba(228,252,68,0.10)"; ctx.lineWidth = w * 4.5; ctx.stroke(path);
+    ctx.strokeStyle = "rgba(228,252,68,0.22)"; ctx.lineWidth = w * 2.2; ctx.stroke(path);
+    ctx.strokeStyle = "#E4FC44"; ctx.lineWidth = w; ctx.stroke(path);
+  }
+  function glowDot(ctx, x, y, r, R) {
+    var rg = ctx.createRadialGradient(x, y, 0, x, y, R);
+    rg.addColorStop(0, "rgba(228,252,68,0.55)"); rg.addColorStop(1, "rgba(228,252,68,0)");
+    ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill();
+    ctx.fillStyle = "#E4FC44"; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  }
+
+  Chart.prototype.draw = function (t, box, o) {
+    var ctx = this.ctx;
+    ctx.clearRect(0, 0, this.W, this.H);
+    if (!box || box.x1 - box.x0 < 60 || box.y1 - box.y0 < 40) return;
+    var g = geo(box), v = vals(o.ans), small = !!box.small, lw = small ? 2.25 : 2.75;
+    var mono = "500 " + (small ? 9.5 : 10.5) + "px 'JetBrains Mono', ui-monospace, monospace";
+    var shown = Math.min(o.shown, v.length - 1), full = Math.floor(shown + 1e-6), frac = shown - full;
+
+    // grade
+    ctx.lineWidth = 1;
+    for (var i = 0; i <= Q.length; i++) { var gx = Math.round(g.X(i)) + 0.5; ctx.strokeStyle = "rgba(255,255,255," + (i <= shown ? 0.08 : 0.04) + ")"; ctx.beginPath(); ctx.moveTo(gx, g.y0); ctx.lineTo(gx, g.y1); ctx.stroke(); }
+    for (var hl = 0; hl <= 4; hl++) { var gy2 = Math.round(g.y0 + (g.y1 - g.y0) * hl / 4) + 0.5; ctx.strokeStyle = "rgba(255,255,255,0.05)"; ctx.beginPath(); ctx.moveTo(g.x0, gy2); ctx.lineTo(g.x1, gy2); ctx.stroke(); }
+    ctx.fillStyle = "rgba(228,252,68,0.03)"; ctx.fillRect(g.split, g.y0, g.x1 - g.split, g.y1 - g.y0);
+
+    // meta: a linha tracejada ganha o nome da meta escolhida na pergunta 2 e pisca quando o ponto chega
+    var gy = g.Y(GOAL), fl = o.flash || 0, projDone = o.proj > 0.98;
+    ctx.setLineDash([4, 6]); ctx.strokeStyle = "rgba(228,252,68," + (0.5 + 0.5 * fl) + ")"; ctx.lineWidth = 1 + 1.5 * fl;
+    ctx.beginPath(); ctx.moveTo(g.x0, gy); ctx.lineTo(g.x1, gy); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1;
+    if (box.labels) {
+      ctx.font = mono; ctx.textBaseline = "bottom"; ctx.textAlign = "left"; ctx.fillStyle = "rgba(228,252,68,0.92)";
+      ctx.fillText(o.ans.length > 1 && shown > 1.5 ? "META: " + GOALS[o.ans[1]] : "SUA META", g.x0 + 2, gy - 6);
+      ctx.fillStyle = "#8E8E8E"; ctx.textBaseline = "top"; ctx.fillText("HOJE", g.x0, g.y1 + 7);
+      ctx.textAlign = "right"; ctx.fillText(small ? (projDone ? "PROJEÇÃO ILUSTRATIVA" : "90 DIAS") : "PRÓXIMOS 90 DIAS", g.x1, g.y1 + 7);
+    }
+
+    // linha percorrida
+    var P = []; for (var k = 0; k <= full; k++) P.push({ x: g.X(k), y: g.Y(v[k]) });
+    var head = P[P.length - 1];
+    if (frac > 0.001 && full + 1 < v.length) { var nx = g.X(full + 1), ny = g.Y(v[full + 1]); head = { x: head.x + (nx - head.x) * frac, y: head.y + (ny - head.y) * frac }; P.push(head); }
+    if (P.length > 1) {
+      var line = new Path2D(); curve(line, P);
+      var area = new Path2D(); curve(area, P); area.lineTo(head.x, g.y1); area.lineTo(P[0].x, g.y1); area.closePath();
+      var gr = ctx.createLinearGradient(0, g.y0, 0, g.y1); gr.addColorStop(0, "rgba(228,252,68,0.26)"); gr.addColorStop(1, "rgba(228,252,68,0)");
+      ctx.fillStyle = gr; ctx.fill(area);
+      glowStroke(ctx, line, lw);
+    }
+
+    // prévia: ao passar o mouse numa opção, mostra até onde aquela resposta leva a linha
+    if (o.ghost != null && o.ghostA > 0.02 && o.ans.length === o.ghostStep && shown >= v.length - 1.02) {
+      var base = v[v.length - 1], gv = Math.min(100, base + Q[o.ghostStep].d[o.ghost]);
+      var p0 = { x: g.X(v.length - 1), y: g.Y(base) }, p1 = { x: g.X(v.length), y: g.Y(gv) };
+      var gp = new Path2D(); curve(gp, [p0, p1]);
+      ctx.globalAlpha = o.ghostA;
+      ctx.setLineDash([4, 5]); ctx.strokeStyle = "rgba(228,252,68,0.85)"; ctx.lineWidth = 2; ctx.stroke(gp); ctx.setLineDash([]);
+      ctx.strokeStyle = "#E4FC44"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p1.x, p1.y, 6, 0, TAU); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    // projeções no resultado
+    if (o.proj > 0.001 && v.length === Q.length + 1) {
+      var last = { x: g.X(Q.length), y: g.Y(v[v.length - 1]) }, pr = o.proj;
+      var withEnd = { x: g.x1 - 4, y: g.Y(97) }, soloEnd = { x: g.x1 - 4, y: g.Y(Math.min(v[v.length - 1] + 12, 72)) };
+      var part = function (end, cpy) {
+        var path = new Path2D(); path.moveTo(last.x, last.y);
+        var steps = 30, n = Math.max(1, Math.round(steps * pr));
+        for (var s = 1; s <= n; s++) { var tt = s / steps, ix = last.x + (end.x - last.x) * tt, iy = (1 - tt) * (1 - tt) * last.y + 2 * (1 - tt) * tt * cpy + tt * tt * end.y; path.lineTo(ix, iy); }
+        return path;
+      };
+      ctx.setLineDash([3, 5]); ctx.strokeStyle = "rgba(200,200,200,0.6)"; ctx.lineWidth = 1.75; ctx.stroke(part(soloEnd, last.y)); ctx.setLineDash([]);
+      glowStroke(ctx, part(withEnd, last.y + (withEnd.y - last.y) * 0.15), lw);
+      if (pr > 0.98 && box.labels) {
+        ctx.font = "600 " + (small ? 11 : 12) + "px Poppins, sans-serif"; ctx.textAlign = "right"; ctx.textBaseline = "top";
+        ctx.fillStyle = "#E4FC44"; ctx.fillText("Com o Maicon", withEnd.x - 6, withEnd.y + 10);
+        ctx.fillStyle = "#B4B4B4"; ctx.fillText("Sozinho", soloEnd.x - 6, soloEnd.y + 10);
+        if (!small) { ctx.font = mono; ctx.fillStyle = "#8E8E8E"; ctx.textBaseline = "top"; ctx.fillText("PROJEÇÃO ILUSTRATIVA", g.x1, g.y1 + 22); }
+      }
+    }
+
+    // pontos respondidos (no desktop, com a resposta escrita, alternando acima e abaixo)
+    for (var j = 1; j <= full; j++) {
+      var px = g.X(j), py = g.Y(v[j]), hv = j === o.hover;
+      ctx.fillStyle = "#1D1D1D"; ctx.beginPath(); ctx.arc(px, py, hv ? 7 : (small ? 4 : 5), 0, TAU); ctx.fill();
+      ctx.strokeStyle = "#E4FC44"; ctx.lineWidth = 2; ctx.stroke();
+      if (box.nodeLabels) {
+        // a linha sobe da esquerda para a direita: acima-esquerda e abaixo-direita de cada ponto ficam sempre livres
+        var lbl = Q[j - 1].s[o.ans[j - 1]];
+        ctx.font = "500 11.5px Manrope, sans-serif"; ctx.fillStyle = "rgba(252,252,252,0.8)";
+        if (j % 2 === 1) { ctx.textAlign = "right"; ctx.textBaseline = "bottom"; ctx.fillText(lbl, Math.max(px - 9, g.x0 + ctx.measureText(lbl).width), py - 8); }
+        else { ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText(lbl, px + 9, py + 8); }
+      }
+    }
+
+    // pulso quando o ponto chega
+    if (o.pulses) {
+      var tn = t || now();
+      for (var q = o.pulses.length - 1; q >= 0; q--) {
+        var pl = o.pulses[q], age = (tn - pl.t0) / 1000;
+        if (age >= 1) { o.pulses.splice(q, 1); continue; }
+        if (pl.i >= v.length) continue;
+        ctx.strokeStyle = "rgba(228,252,68," + (0.8 * (1 - age)) + ")"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(g.X(pl.i), g.Y(v[pl.i]), 6 + age * (small ? 24 : 34), 0, TAU); ctx.stroke();
+      }
+    }
+
+    // cabeça da linha, respirando
+    glowDot(ctx, head.x, head.y, (small ? 4.5 : 5.5) + Math.sin((t || 0) / 300) * 1.1, small ? 18 : 24);
+  };
+
+  var bgDirty = true;
+  var chart = new Chart($("#chart"));                                         // gráfico do quiz (dentro do espaço reservado)
+  var bgChart = new Chart($("#chart-bg"), function () { bgDirty = true; });   // marca d'água da página do vídeo
+  var vCanvas = $("#v-canvas"), vChart = new Chart(vCanvas);                  // gráfico dentro do vídeo
+
+  function slotBox() {
+    var desk = window.innerWidth >= 1000;
+    var low = !desk && chart.H < 120;   // gráfico baixinho dos celulares pequenos: margens menores para a linha continuar visível
+    return { x0: desk ? 8 : 12, x1: chart.W - (desk ? 8 : 6), y0: desk ? 44 : (low ? 18 : 24), y1: chart.H - (desk ? 34 : (low ? 16 : 22)), labels: true, nodeLabels: desk, small: !desk };
+  }
+  function watermarkBox(W, H) {
+    return W >= 1000 ? { x0: W * 0.56, x1: W - 64, y0: H * 0.34, y1: H * 0.86, labels: false } : { x0: 20, x1: W - 20, y0: H * 0.4, y1: H * 0.75, labels: false, small: true };
+  }
+  function videoBox(W, H) { return { x0: W * 0.07, x1: W * 0.93, y0: H * 0.2, y1: H * 0.82, labels: false, small: W < 520 }; }
+  function nodePos(i) { var r = slot.getBoundingClientRect(), g = geo(slotBox()), v = vals(a); return { x: r.left + g.X(i), y: r.top + g.Y(v[Math.min(i, v.length - 1)]) }; }
+
+  // Toque ou mouse sobre um ponto mostra a resposta daquela pergunta
+  function pickNode(ev) {
+    if (viewQuiz.hidden) return;
+    var r = slot.getBoundingClientRect(), x = ev.clientX - r.left, y = ev.clientY - r.top;
+    var g = geo(slotBox()), v = vals(a), best = -1, bd = 30, n = Math.min(Math.floor(anim.shown + 1e-3), a.length);
+    for (var i = 1; i <= n; i++) { var d = Math.hypot(g.X(i) - x, g.Y(v[i]) - y); if (d < bd) { bd = d; best = i; } }
+    anim.hover = best;
+    if (best < 0) { tip.hidden = true; return; }
+    tip.textContent = ""; tip.appendChild(el("small", null, "Resposta " + best)); tip.appendChild(document.createTextNode(Q[best - 1].o[a[best - 1]]));
+    tip.hidden = false;
+    // centraliza no ponto, mas nunca deixa o balão sair da tela
+    var half = tip.offsetWidth / 2, minC = half + 8 - r.left, maxC = window.innerWidth - r.left - half - 8;
+    tip.style.left = clamp(g.X(best), minC, Math.max(minC, maxC)) + "px";
+    tip.style.top = g.Y(v[best]) + "px";
+  }
+  slot.addEventListener("pointermove", pickNode);
+  slot.addEventListener("pointerdown", pickNode);
+  slot.addEventListener("pointerleave", function (e) { if (e.pointerType === "mouse") { tip.hidden = true; anim.hover = -1; } });
+
+  /* =====================================================================
+     LUZ FLUIDA · shader WebGL em meia resolução (leve e suave)
+     ===================================================================== */
+  var gl = null, glU = {}, glCanvas = $("#gl");
+  (function initGL() {
+    try { gl = glCanvas.getContext("webgl", { antialias: false, premultipliedAlpha: false, powerPreference: "low-power" }); } catch (e) { gl = null; }
+    if (!gl) return;
+    var vs = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
+    var fs = [
+      "precision mediump float;uniform vec2 r;uniform float t;uniform float pr;uniform float pu;",
+      "float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}",
+      "float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}",
+      "float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<" + (window.innerWidth < 700 ? 4 : 5) + ";i++){v+=a*n(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}", // celular: uma camada a menos de ruído
+      "void main(){vec2 uv=gl_FragCoord.xy/r;vec2 q=uv;q.x*=r.x/r.y;float tt=t*.045;",
+      "vec2 w=vec2(fbm(q*1.4+vec2(tt,-tt*.7)),fbm(q*1.4+vec2(-tt*.8,tt)+4.3));",
+      "float f=fbm(q*1.1+w*2.2+vec2(tt*.5,0.));",
+      "float y=uv.y-.62+(f-.5)*.9;float rib=exp(-y*y*38.);float rib2=exp(-pow(uv.y-.3+(w.x-.5)*.8,2.)*60.)*.45;",
+      "float lift=.45+pr*.55+pu*.8;",
+      "vec3 base=vec3(.114);vec3 lime=vec3(.894,.988,.267);",
+      "vec3 col=base+lime*(rib*.42+rib2*.22)*lift+lime*pow(f,5.)*.12*lift;",
+      "col+=vec3(.03)*smoothstep(.55,.9,f);",
+      "float vg=smoothstep(1.25,.25,length((uv-vec2(.55,.55))*vec2(1.,1.3)));col*=mix(.55,1.,vg);",
+      "gl_FragColor=vec4(col,1.);}"
+    ].join("\n");
+    function sh(type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null; }
+    var v = sh(gl.VERTEX_SHADER, vs), f = sh(gl.FRAGMENT_SHADER, fs);
+    if (!v || !f) { gl = null; return; }
+    var prog = gl.createProgram(); gl.attachShader(prog, v); gl.attachShader(prog, f); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { gl = null; return; }
+    gl.useProgram(prog);
+    var buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    ["r", "t", "pr", "pu"].forEach(function (k) { glU[k] = gl.getUniformLocation(prog, k); });
+    glCanvas.addEventListener("webglcontextlost", function (e) { e.preventDefault(); gl = null; }); // cai para o gradiente de reserva
+  })();
+  function glResize() { if (!gl) return; glCanvas.width = Math.max(2, Math.round(window.innerWidth * 0.5)); glCanvas.height = Math.max(2, Math.round(window.innerHeight * 0.5)); gl.viewport(0, 0, glCanvas.width, glCanvas.height); }
+  window.addEventListener("resize", glResize); glResize();
+  function glDraw(t) {
+    if (!gl) return;
+    gl.uniform2f(glU.r, glCanvas.width, glCanvas.height); gl.uniform1f(glU.t, reduce ? 20 : t / 1000);
+    gl.uniform1f(glU.pr, anim.shown / Q.length); gl.uniform1f(glU.pu, anim.boost);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+
+  /* =====================================================================
+     LAÇO DE ANIMAÇÃO ÚNICO
+     ===================================================================== */
+  var vT0 = 0, videoVisible = true;
+  function loop(t) {
+    var k = reduce ? 1 : 0.09;
+    anim.shown += (anim.target - anim.shown) * k; if (Math.abs(anim.target - anim.shown) < 0.001) anim.shown = anim.target;
+    anim.proj += (anim.projTarget - anim.proj) * (reduce ? 1 : 0.035); if (Math.abs(anim.projTarget - anim.proj) < 0.001) anim.proj = anim.projTarget;
+    anim.ghostA += ((anim.ghost != null ? 1 : 0) - anim.ghostA) * (reduce ? 1 : 0.18);
+    anim.boost *= 0.94; anim.flash *= 0.96;
+    glDraw(t);
+    if (!viewQuiz.hidden) {
+      chart.draw(t, slotBox(), { ans: a, shown: anim.shown, proj: anim.proj, pulses: anim.pulses, ghost: anim.ghost, ghostA: anim.ghostA, ghostStep: step, hover: anim.hover, flash: anim.flash });
+    } else if (bgDirty) {
+      // na página do vídeo o gráfico vira marca d'água estática: desenha uma vez e para (economiza bateria)
+      if (finished) bgChart.draw(t, watermarkBox(bgChart.W, bgChart.H), { ans: a, shown: Q.length, proj: 1, hover: -1 });
+      else bgChart.draw(t, null, {});
+      bgDirty = false;
+    }
+    if (!viewVsl.hidden && videoVisible && vCanvas.isConnected) {
+      // dentro do vídeo, enquanto ele não toca: o caminho da pessoa se desenhando em loop
+      var cyc = ((t - vT0) / 1000) % 7, sh = Math.min(Q.length, cyc * 1.6), pj = cyc > 4.6 ? Math.min(1, (cyc - 4.6) / 1.4) : 0;
+      vChart.draw(t, videoBox(vChart.W, vChart.H), { ans: finished ? a : DEMO_ANS, shown: reduce ? Q.length : sh, proj: reduce ? 1 : pj, hover: -1 });
+    }
+    requestAnimationFrame(loop);
+  }
+
+  /* =====================================================================
+     MICROINTERAÇÕES
+     ===================================================================== */
+  function words(node, text) { node.textContent = ""; text.split(" ").forEach(function (w, i, arr) { node.appendChild(el("span", "w", w + (i < arr.length - 1 ? " " : ""))); }); }
+  function revealWords(node, delay) {
+    if (reduce) return;
+    $$(".w", node).forEach(function (w, i) { w.animate([{ opacity: 0, transform: "translateY(14px)", filter: "blur(6px)" }, { opacity: 1, transform: "none", filter: "blur(0)" }], { duration: 560, delay: (delay || 0) + i * 30, easing: EASE, fill: "backwards" }); });
+  }
+  function ripple(host, x, y, color) {
+    var r = host.getBoundingClientRect(), rp = el("span", "ripple"), size = Math.max(r.width, r.height) * 2.6;
+    if (x == null) { x = r.left + r.width / 2; y = r.top + r.height / 2; }
+    rp.style.width = rp.style.height = size + "px"; rp.style.left = (x - r.left) + "px"; rp.style.top = (y - r.top) + "px";
+    if (color) rp.style.background = color;
+    host.appendChild(rp);
+    if (reduce) { rp.remove(); return; }
+    var an = rp.animate([{ transform: "translate(-50%,-50%) scale(0)", opacity: 1 }, { transform: "translate(-50%,-50%) scale(1)", opacity: color ? 0 : 1 }], { duration: 520, easing: "cubic-bezier(.3,.7,.3,1)", fill: "forwards" });
+    if (color) an.onfinish = function () { rp.remove(); };
+  }
+
+  /* =====================================================================
+     TELA 1 · QUIZ
+     ===================================================================== */
+  function enter(scr) {
+    if (reduce) return;
+    var ws = $$(".w", scr);
+    revealWords(scr, 40);
+    $$(".kicker, .sub, .opt, .q-foot, .card, .btn, .link", scr).forEach(function (n, i) { n.animate([{ opacity: 0, transform: "translateY(18px)" }, { opacity: 1, transform: "none" }], { duration: 520, delay: 160 + ws.length * 22 + i * 60, easing: EASE, fill: "backwards" }); });
+  }
+  function leave(cb) {
+    var scr = stage.firstChild;
+    if (!scr || reduce) { cb(); return; }
+    var an = scr.animate([{ opacity: 1, transform: "none", filter: "blur(0)" }, { opacity: 0, transform: "translateY(-14px)", filter: "blur(8px)" }], { duration: 280, easing: "ease-in", fill: "forwards" });
+    an.onfinish = cb;
+  }
+  function screen() { stage.textContent = ""; var s = el("div", "screen"); stage.appendChild(s); return s; }
+
+  function question() {
+    busy = false; anim.ghost = null; anim.hover = -1; tip.hidden = true; $("#foot-txt").hidden = false;
+    var cur = step, item = Q[cur], s = screen();
+    var n = Q.length, lab = cur === 0 ? "Diagnóstico gratuito · 1 de " + n : cur === n - 1 ? "Última pergunta" : cur === n - 2 ? "Quase lá · " + (cur + 1) + " de " + n : "Pergunta " + (cur + 1) + " de " + n;
+    var k = el("div", "kicker"); k.appendChild(el("span", "mono", lab));
+    var bar = el("span", "bar"), bi = el("i"); bi.style.width = (cur / Q.length * 100) + "%"; bar.appendChild(bi); k.appendChild(bar); s.appendChild(k);
+    requestAnimationFrame(function () { requestAnimationFrame(function () { bi.style.width = ((cur + 1) / Q.length * 100) + "%"; }); });
+    var h = el("h2"); h.tabIndex = -1; h.setAttribute("aria-label", item.q); words(h, item.q); s.appendChild(h);
+    if (cur === 0) s.appendChild(el("p", "sub hint", "Responda pensando nos últimos 30 dias. No final, você vê o que trava o seu perfil. Spoiler: não é o algoritmo."));
+    var opts = el("div", "opts"); opts.setAttribute("role", "group"); opts.setAttribute("aria-label", "Opções de resposta");
+    item.o.forEach(function (label, i) {
+      var b = el("button", "opt sweep"); b.type = "button"; b.id = "q" + cur + "o" + i;
+      b.appendChild(el("span", "t", label));
+      var dt = el("span", "dot"); dt.setAttribute("aria-hidden", "true"); b.appendChild(dt);
+      b.addEventListener("pointerdown", function (e) { b._p = { x: e.clientX, y: e.clientY }; });
+      b.addEventListener("pointerenter", function (e) { if (e.pointerType === "mouse" && !busy) anim.ghost = i; });
+      b.addEventListener("pointerleave", function (e) { if (e.pointerType === "mouse" && anim.ghost === i && !busy) anim.ghost = null; });
+      b.addEventListener("focus", function () { var kb = false; try { kb = b.matches(":focus-visible"); } catch (x) {} if (kb && !busy) anim.ghost = i; });
+      b.addEventListener("blur", function () { if (anim.ghost === i && !busy) anim.ghost = null; });
+      b.addEventListener("click", function (e) { choose(i, b, e); });
+      opts.appendChild(b);
+    });
+    s.appendChild(opts);
+    if (cur > 0) {
+      var f = el("div", "q-foot"), back = el("button", "link", "Voltar"); back.type = "button";
+      back.addEventListener("click", function () { if (busy) return; busy = true; gen++; a.length = cur - 1; step = cur - 1; anim.target = step; anim.ghost = null; leave(question); });
+      f.appendChild(back); s.appendChild(f);
+    }
+    enter(s);
+    setTimeout(function () { h.focus({ preventScroll: true }); }, 30);
+  }
+
+  function choose(i, btn, e) {
+    if (busy) return; busy = true; anim.ghost = null;
+    var myGen = gen, cur = step, idx = cur + 1, last = cur === Q.length - 1;
+    a[cur] = i;
+    if (cur === 0) track("quiz_start");
+    track("quiz_answer", { pergunta: idx, resposta: Q[cur].s[i] });
+    live.textContent = "Resposta registrada: " + Q[cur].o[i] + ".";
+    var p = btn._p && e.detail ? btn._p : null;
+    ripple(btn, p && p.x, p && p.y);
+    btn.classList.add("picked"); btn.parentNode.classList.add("chosen");
+    if (navigator.vibrate) { try { navigator.vibrate(12); } catch (x) {} }
+    // se a pessoa rolou para responder, volta ao topo para ver o ponto chegar no gráfico
+    var scrolled = window.scrollY > 4;
+    if (scrolled) window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+    setTimeout(function () {
+      if (myGen !== gen) return;
+      if (reduce) { arrive(idx); return; }
+      var d = btn.querySelector(".dot").getBoundingClientRect(), from = { x: d.left + d.width / 2, y: d.top + d.height / 2 }, to = nodePos(idx);
+      var fly = el("div", "fly"); document.body.appendChild(fly);
+      var mid = { x: (from.x + to.x) / 2 + (to.x > from.x ? -40 : 40), y: Math.min(from.y, to.y) - 60 };
+      var an = fly.animate([
+        { transform: "translate(" + from.x + "px," + from.y + "px) scale(1.4)" },
+        { transform: "translate(" + mid.x + "px," + mid.y + "px) scale(1)", offset: 0.5 },
+        { transform: "translate(" + to.x + "px," + to.y + "px) scale(.7)" }
+      ], { duration: 720, easing: "cubic-bezier(.5,0,.25,1)", fill: "forwards" });
+      an.onfinish = function () { fly.remove(); if (myGen === gen) arrive(idx); };
+    }, scrolled ? 480 : 260);
+    setTimeout(function () {
+      if (myGen !== gen) return;
+      leave(function () { if (myGen !== gen) return; if (!last) { step = idx; question(); } else { result(); } });
+    }, reduce ? 80 : 560);
+  }
+  function arrive(idx) {
+    anim.target = idx; anim.boost = 1; anim.pulses.push({ i: idx, t0: now() });
+    if (idx === 2) anim.flash = 1;   // a meta acabou de ganhar nome
+    if (idx === Q.length) setTimeout(function () { if (finished) anim.projTarget = 1; }, reduce ? 0 : 450);
+  }
+
+  function result() {
+    finished = true; busy = false; $("#foot-txt").hidden = true;   // "o resultado aparece na hora" não faz sentido com o resultado na tela
+    var g = gargalo(), m = mensal();
+    track("quiz_complete", { onde_trava: g.name, formato: m ? "mensal" : "aula" });
+    var s = screen();
+    var k = el("div", "kicker"); k.appendChild(el("span", "mono", "Diagnóstico pronto")); s.appendChild(k);
+    var h = el("h2"); h.tabIndex = -1; h.setAttribute("aria-label", "Não é o algoritmo. É " + g.is + ".");
+    words(h, "Não é o algoritmo."); h.appendChild(el("br")); var em = el("em"); words(em, "É " + g.is + "."); h.appendChild(em); s.appendChild(h);   // veredito inteiro na segunda linha, em destaque
+    var c1 = el("div", "card hot"); c1.appendChild(el("span", "mono", "O que está acontecendo")); c1.appendChild(el("p", null, g.text));
+    var first = el("div", "first"); first.appendChild(el("span", "mono", "Faça isso hoje")); first.appendChild(el("span", null, g.plan[0])); c1.appendChild(first);
+    c1.appendChild(el("p", "next", "Os passos 2 e 3 estão na próxima tela, junto com o vídeo do Maicon.")); s.appendChild(c1);
+    var c2 = el("div", "card"); c2.appendChild(el("span", "mono", "Indicado para o seu caso"));
+    c2.appendChild(el("b", null, m ? "Mentoria de 30 dias com o Maicon" : "Sessão individual com o Maicon"));
+    c2.appendChild(el("p", null, m ? "No seu momento, ter o Maicon ajustando a rota toda semana acelera mais do que uma sessão só." : "Você já tem base. Uma sessão focada nesse ponto deve bastar para destravar."));
+    s.appendChild(c2);
+    var go = el("button", "btn cta-sticky", "Quero ver o plano completo"); go.type = "button";
+    go.addEventListener("click", function (e) { ripple(go, e.clientX, e.clientY, "rgba(255,255,255,.5)"); setTimeout(function () { openVSL(true); }, reduce ? 0 : 280); });
+    s.appendChild(go);
+    var redo = el("button", "link", "Refazer o diagnóstico"); redo.type = "button"; redo.style.justifySelf = "center";
+    redo.addEventListener("click", resetQuiz); s.appendChild(redo);
+    enter(s);
+    setTimeout(function () { h.focus({ preventScroll: true }); }, 30);
+    refreshWa();
+  }
+
+  function showQuiz() {
+    viewVsl.hidden = true; viewQuiz.hidden = false; document.body.classList.remove("vsl");
+    bgChart.draw(0, null, {}); bgDirty = true;   // limpa a marca d'água
+    var dock = $("#dock"); dock.classList.remove("show"); dock.hidden = true;
+    window.scrollTo(0, 0);
+  }
+  function resetQuiz() {
+    gen++; a = []; step = 0; finished = false; busy = false;
+    anim.target = 0; anim.projTarget = 0; anim.proj = 0; anim.ghost = null; anim.pulses = []; anim.hover = -1;
+    track("quiz_restart");
+    if (viewQuiz.hidden) { showQuiz(); question(); } else leave(question);
+    refreshWa();
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (!$("#sheet").hidden || viewQuiz.hidden || busy || e.ctrlKey || e.metaKey || e.altKey) return;
+    var i = { "1": 0, "2": 1, "3": 2, "4": 3 }[e.key];
+    var btn = i != null ? stage.querySelectorAll(".opt")[i] : null;
+    if (btn) btn.click();
+  });
+
+  /* =====================================================================
+     WHATSAPP · a mensagem já vai com as respostas do quiz
+     ===================================================================== */
+  function msgFor(kind) {
+    var base = "Oi, Maicon! Vim pelo Instagram";
+    if (!finished) return base + " e quero saber mais sobre " + (kind === "aula" ? "a sessão individual" : kind === "mensal" ? "a mentoria de 30 dias" : "a mentoria de crescimento nas redes") + ".";
+    var f = kind === "aula" ? "sessão individual" : kind === "mensal" ? "mentoria de 30 dias" : (mensal() ? "mentoria de 30 dias" : "sessão individual");
+    var lines = Q.slice(0, 6).map(function (q, i) { return q.k + ": " + q.s[a[i]]; });
+    return base + " e fiz o diagnóstico.\n" + lines.join("\n") + "\nOnde travo: " + gargalo().name + "\nTenho interesse na " + f + ".";
+  }
+  function refreshWa() {
+    $$("[data-wa]").forEach(function (lk) {
+      lk.href = WA_OK ? "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent(msgFor(lk.getAttribute("data-wa"))) : "#";
+      if (WA_OK) { lk.target = "_blank"; lk.rel = "noopener noreferrer"; }
+    });
+  }
+  $$("[data-wa]").forEach(function (lk) {
+    lk.addEventListener("pointerdown", function (e) { ripple(lk, e.clientX, e.clientY, lk.classList.contains("ghost") ? "rgba(228,252,68,.35)" : "rgba(255,255,255,.5)"); });
+    lk.addEventListener("click", function (e) {
+      track("whatsapp_click", { origem: lk.getAttribute("data-from") || lk.getAttribute("data-wa") });
+      if (!WA_OK) { e.preventDefault(); openSheet(msgFor(lk.getAttribute("data-wa"))); } // demonstração: mostra a mensagem em vez de abrir um link inválido
+    });
+  });
+
+  var sheet = $("#sheet"), sheetCard = $(".sheet-card", sheet), lastFocus = null, closing = false;
+  function openSheet(text) {
+    lastFocus = document.activeElement;
+    $("#sheet-msg").textContent = text;
+    sheet.hidden = false; document.documentElement.classList.add("lock");
+    if (!reduce) {
+      sheet.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, fill: "backwards" });
+      sheetCard.animate([{ transform: "translateY(24px) scale(.98)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 380, easing: EASE, fill: "backwards" });
+    }
+    $("#sheet-close").focus();
+  }
+  function closeSheet() {
+    if (sheet.hidden || closing) return;
+    closing = true;
+    var an = null, ended = false;
+    var done = function () {
+      if (ended) return; ended = true; closing = false;
+      if (an) an.cancel();
+      sheet.hidden = true; document.documentElement.classList.remove("lock");
+      if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+    };
+    if (reduce) { done(); return; }
+    an = sheet.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, fill: "forwards" });
+    an.onfinish = done;
+    setTimeout(done, 260);   // fecha mesmo se o aparelho estiver lento e a animação atrasar
+  }
+  sheet.addEventListener("click", function (e) { if (e.target === sheet) closeSheet(); });
+  $("#sheet-close").addEventListener("click", closeSheet);
+  document.addEventListener("keydown", function (e) {
+    if (sheet.hidden) return;
+    if (e.key === "Escape") closeSheet();
+    if (e.key === "Tab") { e.preventDefault(); $("#sheet-close").focus(); } // único botão do diálogo: o foco não escapa
+  });
+
+  /* =====================================================================
+     TELA 2 · PÁGINA DO VÍDEO
+     ===================================================================== */
+  function fillVSL() {
+    var title = $("#v-title"), tag = $("#v-tag"), lead = $("#v-lead");
+    var t0 = finished ? gargalo().title : "Cresça nas redes com a régua de quem paga por cada visualização.";
+    tag.textContent = finished ? gargalo().tag : "Para quem posta e não cresce";
+    words(title, t0); title.setAttribute("aria-label", t0);
+    lead.textContent = "O Maicon roda anúncios na Nextrix e paga por cada visualização: sabe pelos números o que faz alguém parar de rolar o feed. Na mentoria, ele usa essa régua para os seus vídeos chegarem em mais gente.";
+    var rc = $("#recap"); rc.textContent = "";
+    if (finished) {
+      var left = el("div", "card"); left.appendChild(el("span", "mono", "Suas respostas"));
+      var chips = el("div", "chips");
+      Q.slice(0, 6).forEach(function (q, i) { var c = el("div", "chip"); c.appendChild(el("span", "mono", q.k)); c.appendChild(el("b", null, q.s[a[i]])); chips.appendChild(c); });
+      left.appendChild(chips); rc.appendChild(left);
+      // amostra grátis: os 3 primeiros passos para o perfil da pessoa
+      var g2 = gargalo(), right = el("div", "card hot");
+      right.appendChild(el("span", "mono", "Onde você trava")); right.appendChild(el("b", null, g2.name)); right.appendChild(el("p", null, g2.text));
+      var ol = el("ol", "plan"); g2.plan.forEach(function (x) { ol.appendChild(el("li", null, x)); }); right.appendChild(ol);
+      rc.appendChild(right);
+    } else {
+      var c0 = el("div", "card"); c0.appendChild(el("span", "mono", "Você ainda não fez o diagnóstico"));
+      c0.appendChild(el("b", null, "Responda 7 perguntas e veja o que o Maicon faria no seu perfil primeiro."));
+      var bq = el("button", "btn ghost", "Fazer o diagnóstico"); bq.type = "button"; bq.style.marginTop = "10px"; bq.addEventListener("click", resetQuiz);
+      c0.appendChild(bq); rc.appendChild(c0);
+    }
+    var rec = finished ? (mensal() ? "mensal" : "aula") : "mensal";
+    $$(".format").forEach(function (f) {
+      var on = f.getAttribute("data-kind") === rec;
+      f.classList.toggle("rec", on && finished);
+      $(".rec-badge", f).hidden = !(on && finished);
+      $(".btn", f).classList.toggle("ghost", !on);
+    });
+    refreshWa();
+  }
+  function openVSL(animated) {
+    fillVSL();
+    var go = function () {
+      viewQuiz.hidden = true; viewVsl.hidden = false; document.body.classList.add("vsl");
+      bgDirty = true; window.scrollTo(0, 0); vT0 = now();
+      revealWords($("#v-title"), 120);
+      if (!reduce) $$("#v-tag, #v-lead, #video-frame, .hero .cta, #v-note").forEach(function (n, i) { n.animate([{ opacity: 0, transform: "translateY(22px)" }, { opacity: 1, transform: "none" }], { duration: 700, delay: 200 + i * 110, easing: EASE, fill: "backwards" }); });
+      setupVSL();
+      setTimeout(function () { $("#v-title").focus({ preventScroll: true }); }, 50);
+      track("vsl_open", { com_quiz: finished });
+      onScroll();
+    };
+    if (reduce || !animated) { go(); return; }
+    var an = viewQuiz.animate([{ opacity: 1 }, { opacity: 0, filter: "blur(8px)" }], { duration: 320, fill: "forwards" });
+    an.onfinish = function () { an.cancel(); go(); };
+  }
+  if ($("#skip")) $("#skip").addEventListener("click", function () { openVSL(true); });
+  $("#redo").addEventListener("click", resetQuiz);
+  $("#home").addEventListener("click", function (e) { e.preventDefault(); window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); });
+
+  $("#play").addEventListener("click", function () {
+    track("video_play");
+    var frame = $("#video-frame");
+    if (CONFIG.video.type && CONFIG.video.src) {
+      $("#video-ui").remove(); vCanvas.remove();
+      var node;
+      if (CONFIG.video.type === "youtube") {
+        node = document.createElement("iframe");
+        node.src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(CONFIG.video.src) + "?rel=0&modestbranding=1&playsinline=1&autoplay=1";
+        node.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen"; node.allowFullscreen = true; node.title = "Vídeo do Maicon";
+      } else {
+        node = document.createElement("video"); node.src = CONFIG.video.src; node.controls = true; node.autoplay = true; node.playsInline = true;
+      }
+      frame.appendChild(node);
+    } else {
+      $("#v-note").textContent = "Demonstração: o vídeo do Maicon entra neste espaço.";
+    }
+  });
+
+  var vslReady = false;
+  function setupVSL() {
+    $("#dock").hidden = false;
+    if (vslReady) return; vslReady = true;
+    if ("IntersectionObserver" in window && !reduce) {
+      document.body.classList.add("io");
+      var io = new IntersectionObserver(function (en) {
+        en.forEach(function (x) {
+          if (!x.isIntersecting) return;
+          x.target.classList.add("in"); io.unobserve(x.target);
+          var sp = x.target.querySelector(".split"); if (sp) { var tx = sp.textContent; words(sp, tx); sp.setAttribute("aria-label", tx); revealWords(sp, 80); }
+        });
+      }, { threshold: 0.18, rootMargin: "0px 0px -6% 0px" });
+      $$(".rv").forEach(function (n) { io.observe(n); });
+      new IntersectionObserver(function (en) { videoVisible = en[0].isIntersecting; }).observe($("#video-frame"));
+    }
+  }
+  function onScroll() {
+    if (viewVsl.hidden) return;
+    var vh = window.innerHeight;
+    var st = $("#steps"), r = st.getBoundingClientRect();
+    $("#rail").style.height = (clamp((vh * 0.65 - r.top) / r.height, 0, 1) * 100) + "%";
+    $$(".step", st).forEach(function (s) { s.classList.toggle("on", s.getBoundingClientRect().top + 24 < vh * 0.65); });
+    var hc = $(".hero .cta").getBoundingClientRect(), fo = $("#formatos .formats").getBoundingClientRect(), fin = $("#final").getBoundingClientRect();
+    var formatsInView = fo.top < vh * 0.85 && fo.bottom > vh * 0.2;
+    // a barra aparece sempre que o botão do topo não está na tela (acima ou abaixo): sempre há um WhatsApp à vista
+    var heroCtaVisible = hc.top >= 0 && hc.bottom <= vh;   // só conta como visível se aparecer inteiro
+    $("#dock").classList.toggle("show", !heroCtaVisible && fin.top > vh * 0.85 && !formatsInView);
+  }
+  var ticking = false;
+  window.addEventListener("scroll", function () { if (ticking) return; ticking = true; requestAnimationFrame(function () { ticking = false; onScroll(); }); }, { passive: true });
+
+  // pontos do carrossel de depoimentos
+  var quotes = $("#quotes"), dots = $$("#dots i");
+  quotes.addEventListener("scroll", function () {
+    var first = quotes.children[0]; if (!first) return;
+    var w = first.getBoundingClientRect().width + 12, i = clamp(Math.round(quotes.scrollLeft / w), 0, dots.length - 1);
+    dots.forEach(function (d, j) { d.classList.toggle("on", j === i); });
+  }, { passive: true });
+
+  // dúvidas
+  $$(".qa").forEach(function (q) {
+    var b = $("button", q);
+    b.addEventListener("click", function () { var open = !q.classList.contains("open"); q.classList.toggle("open", open); b.setAttribute("aria-expanded", String(open)); });
+  });
+
+  /* =====================================================================
+     INÍCIO
+     ===================================================================== */
+  question();
+  refreshWa();
+  if (location.hash === "#video") {   // link direto para a página do vídeo: endereço/#video
+    openVSL(false);
+    // o navegador pula sozinho até a âncora depois de carregar e esconderia o topo com a marca; volta para o início
+    window.addEventListener("load", function () { setTimeout(function () { window.scrollTo(0, 0); }, 0); });
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
