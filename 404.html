@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Página não encontrada | Mentoria do Maicon</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1D1D1D">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Manrope:wght@400;500&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+  :root { color-scheme: dark; --bg: #1D1D1D; --text: #FCFCFC; --text-2: #C9C9C9; --lime: #E4FC44; --on-lime: #1D1D1D; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; display: grid; place-items: center; text-align: center; padding: 24px max(16px, env(safe-area-inset-left, 0px));
+    background: radial-gradient(ellipse 70% 45% at 50% 15%, rgba(228,252,68,.12), transparent 70%), var(--bg);
+    color: var(--text); font-family: "Manrope", system-ui, sans-serif; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  main { display: grid; gap: 18px; justify-items: center; max-width: 440px; }
+  .tag { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--lime); border: 1px solid rgba(228,252,68,.3); border-radius: 999px; padding: 6px 12px; }
+  h1 { margin: 0; font-family: "Poppins", sans-serif; font-weight: 700; font-size: clamp(1.6rem, 7vw, 2.4rem); line-height: 1.15; letter-spacing: -0.03em; }
+  p { margin: 0; color: var(--text-2); }
+  a { display: inline-flex; align-items: center; justify-content: center; min-height: 56px; padding: 14px 28px; border-radius: 999px; background: var(--lime); color: var(--on-lime); font-family: "Poppins", sans-serif; font-weight: 600; text-decoration: none; }
+  a:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; }
+</style>
+</head>
+<body>
+<main>
+  <span class="tag">Erro 404</span>
+  <h1>Essa página não existe.</h1>
+  <p>O link pode ter mudado. O quiz da mentoria continua no ar.</p>
+  <a id="home" href="/">Voltar para o quiz</a>
+</main>
+<script>
+  // No GitHub Pages de projeto o site fica em /nome-do-repositorio/: o botão volta para o início certo.
+  (function () {
+    var seg = location.pathname.split("/").filter(Boolean)[0];
+    if (/github\.io$/.test(location.hostname) && seg) document.getElementById("home").href = "/" + seg + "/";
+  })();
+</script>
+</body>
+</html>
